@@ -13,7 +13,7 @@
 *
 ****/
 #pragma once
-#if !defined(WEAPONS_H)
+#ifndef WEAPONS_H
 #define WEAPONS_H
 
 #include "effects.h"
@@ -37,7 +37,7 @@ public:
 	static void UseSatchelCharges( entvars_t *pevOwner, SATCHELCODE code );
 
 	void Explode( Vector vecSrc, Vector vecAim );
-	virtual void Explode( TraceResult *pTrace, int bitsDamageType );
+	void Explode( TraceResult *pTrace, int bitsDamageType );
 	void EXPORT Smoke( void );
 
 	void EXPORT BounceTouch( CBaseEntity *pOther );
@@ -83,6 +83,8 @@ public:
 
 #define WEAPON_SUIT				31	// ?????
 
+#define MAX_WEAPONS			32
+
 #define MAX_NORMAL_BATTERY	100
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
@@ -95,35 +97,36 @@ public:
 #define RPG_WEIGHT			20
 #define GAUSS_WEIGHT		20
 #define EGON_WEIGHT			20
-#define HORNETGUN_WEIGHT	15
+#define HORNETGUN_WEIGHT	10
 #define HANDGRENADE_WEIGHT	5
 #define SNARK_WEIGHT		5
 #define SATCHEL_WEIGHT		-10
 #define TRIPMINE_WEIGHT		-10
 
 // weapon clip/carry ammo capacities
-#define URANIUM_MAX_CARRY		100
-#define	_9MM_MAX_CARRY			250
-#define _357_MAX_CARRY			36
-#define BUCKSHOT_MAX_CARRY		125
+#define URANIUM_MAX_CARRY		999
+#define	_9MM_MAX_CARRY			500
+#define _357_MAX_CARRY			16
+#define BUCKSHOT_MAX_CARRY		300
 #define BOLT_MAX_CARRY			50
-#define ROCKET_MAX_CARRY		5
-#define HANDGRENADE_MAX_CARRY	10
-#define SATCHEL_MAX_CARRY		5
-#define TRIPMINE_MAX_CARRY		5
-#define SNARK_MAX_CARRY			15
-#define HORNET_MAX_CARRY		8
-#define M203_GRENADE_MAX_CARRY	10
+#define ROCKET_MAX_CARRY		20
+#define HANDGRENADE_MAX_CARRY	50
+#define SATCHEL_MAX_CARRY		10
+#define TRIPMINE_MAX_CARRY		30
+#define SNARK_MAX_CARRY			20
+#define HORNET_MAX_CARRY		999
+#define M203_GRENADE_MAX_CARRY	25
 
 // the maximum amount of ammo each weapon's clip can hold
 #define WEAPON_NOCLIP			-1
 
 //#define CROWBAR_MAX_CLIP		WEAPON_NOCLIP
-#define GLOCK_MAX_CLIP			17
+#define GLOCK_MAX_CLIP			20
 #define PYTHON_MAX_CLIP			6
-#define MP5_MAX_CLIP			50
-#define SHOTGUN_MAX_CLIP		8
-#define CROSSBOW_MAX_CLIP		5
+#define MP5_MAX_CLIP			55
+#define MP5_DEFAULT_AMMO		25
+#define SHOTGUN_MAX_CLIP		12
+#define CROSSBOW_MAX_CLIP		6
 #define RPG_MAX_CLIP			1
 #define GAUSS_MAX_CLIP			WEAPON_NOCLIP
 #define EGON_MAX_CLIP			WEAPON_NOCLIP
@@ -137,7 +140,7 @@ public:
 #define GLOCK_DEFAULT_GIVE			17
 #define PYTHON_DEFAULT_GIVE			6
 #define MP5_DEFAULT_GIVE			25
-#define MP5_DEFAULT_GIVE_MP			MP5_MAX_CLIP
+#define MP5_DEFAULT_AMMO			25
 #define MP5_M203_DEFAULT_GIVE		0
 #define SHOTGUN_DEFAULT_GIVE		12
 #define CROSSBOW_DEFAULT_GIVE		5
@@ -183,7 +186,6 @@ typedef	enum
 #define ITEM_FLAG_NOAUTOSWITCHEMPTY	4
 #define ITEM_FLAG_LIMITINWORLD		8
 #define ITEM_FLAG_EXHAUSTIBLE		16 // A player can totally exhaust their ammo supply and lose this weapon
-#define ITEM_FLAG_NOAUTOSWITCHTO	32
 
 #define WEAPON_IS_ONTARGET 0x40
 
@@ -317,6 +319,7 @@ public:
 	virtual void PrimaryAttack( void ) { return; }				// do "+ATTACK"
 	virtual void SecondaryAttack( void ) { return; }			// do "+ATTACK2"
 	virtual void Reload( void ) { return; }						// do "+RELOAD"
+	virtual void WeaponTick() {}				// Always called at beginning of ItemPostFrame. - Solokiller
 	virtual void WeaponIdle( void ) { return; }					// called when no buttons pressed
 	virtual int UpdateClientData( CBasePlayer *pPlayer );		// sends hud info to client dll, if things have changed
 	virtual void RetireWeapon( void );
@@ -450,7 +453,7 @@ public:
 	int m_cAmmoTypes;// how many ammo types packed into this box (if packed by a level designer)
 };
 
-#if CLIENT_DLL
+#ifdef CLIENT_DLL
 bool bIsMultiplayer ( void );
 void LoadVModel ( const char *szViewModel, CBasePlayer *m_pPlayer );
 #endif
@@ -473,7 +476,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{ 
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -502,7 +505,7 @@ public:
 	int Swing( int fFirst );
 	BOOL Deploy( void );
 	void Holster( int skiplocal = 0 );
-#if CROWBAR_IDLE_ANIM
+#ifdef CROWBAR_IDLE_ANIM
 	void WeaponIdle();
 #endif
 	int m_iSwing;
@@ -510,7 +513,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{ 
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -540,7 +543,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -566,12 +569,13 @@ public:
 	BOOL Deploy( void );
 	void Reload( void );
 	void WeaponIdle( void );
+	BOOL IsUseable();
 	float m_flNextAnimTime;
 	int m_iShell;
 
 	virtual BOOL UseDecrement( void )
 	{ 
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -605,7 +609,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{ 
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -620,7 +624,7 @@ private:
 class CShotgun : public CBasePlayerWeapon
 {
 public:
-#if !CLIENT_DLL
+#ifndef CLIENT_DLL
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
@@ -635,15 +639,15 @@ public:
 	void SecondaryAttack( void );
 	BOOL Deploy( );
 	void Reload( void );
+	void WeaponTick();
 	void WeaponIdle( void );
-	void ItemPostFrame( void );
 	int m_fInReload;
 	float m_flNextReload;
 	int m_iShell;
 
 	virtual BOOL UseDecrement( void )
 	{
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -672,7 +676,7 @@ public:
 class CRpg : public CBasePlayerWeapon
 {
 public:
-#if !CLIENT_DLL
+#ifndef CLIENT_DLL
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
@@ -701,7 +705,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{ 
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -724,8 +728,6 @@ public:
 	void EXPORT IgniteThink( void );
 	void EXPORT RocketTouch( CBaseEntity *pOther );
 	static CRpgRocket *CreateRpgRocket( Vector vecOrigin, Vector vecAngles, CBaseEntity *pOwner, CRpg *pLauncher );
-	void Explode( TraceResult *pTrace, int bitsDamageType );
-	inline CRpg *GetLauncher( void );
 
 	int m_iTrail;
 	float m_flIgniteTime;
@@ -735,7 +737,7 @@ public:
 class CGauss : public CBasePlayerWeapon
 {
 public:
-#if !CLIENT_DLL
+#ifndef CLIENT_DLL
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
@@ -745,7 +747,7 @@ public:
 	int iItemSlot( void ) { return 4; }
 	int GetItemInfo(ItemInfo *p);
 	int AddToPlayer( CBasePlayer *pPlayer );
-
+	BOOL IsUseable();
 	BOOL Deploy( void );
 	void Holster( int skiplocal = 0  );
 
@@ -767,7 +769,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{ 
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -782,7 +784,7 @@ private:
 class CEgon : public CBasePlayerWeapon
 {
 public:
-#if !CLIENT_DLL
+#ifndef CLIENT_DLL
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
@@ -794,13 +796,13 @@ public:
 	int AddToPlayer( CBasePlayer *pPlayer );
 
 	BOOL Deploy( void );
-	BOOL CanHolster( void );
 	void Holster( int skiplocal = 0 );
 
 	void UpdateEffect( const Vector &startPoint, const Vector &endPoint, float timeBlend );
 
 	void CreateEffect ( void );
 	void DestroyEffect ( void );
+
 	void EndAttack( void );
 	void Attack( void );
 	void PrimaryAttack( void );
@@ -825,7 +827,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -835,7 +837,7 @@ public:
 	unsigned short m_usEgonStop;
 
 private:
-#if !CLIENT_DLL
+#ifndef CLIENT_DLL
 	float				m_shootTime;
 #endif
 	EGON_FIREMODE		m_fireMode;
@@ -848,7 +850,7 @@ private:
 class CHgun : public CBasePlayerWeapon
 {
 public:
-#if !CLIENT_DLL
+#ifndef CLIENT_DLL
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
@@ -870,11 +872,11 @@ public:
 
 	float m_flRechargeTime;
 
-	int m_iFirePhase;
+	int m_iFirePhase;// don't save me.
 
 	virtual BOOL UseDecrement( void )
 	{ 
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -900,7 +902,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{ 
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -911,7 +913,7 @@ public:
 class CSatchel : public CBasePlayerWeapon
 {
 public:
-#if !CLIENT_DLL
+#ifndef CLIENT_DLL
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
@@ -934,7 +936,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{ 
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -963,7 +965,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{ 
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
@@ -991,7 +993,7 @@ public:
 
 	virtual BOOL UseDecrement( void )
 	{
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 		return TRUE;
 #else
 		return FALSE;
