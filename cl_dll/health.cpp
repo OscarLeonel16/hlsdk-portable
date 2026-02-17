@@ -57,7 +57,7 @@ int CHudHealth::Init( void )
 {
 	HOOK_MESSAGE( Health );
 	HOOK_MESSAGE( Damage );
-	m_iHealth = 100;
+	m_iHealth = 200;
 	m_fFade = 0;
 	m_iFlags = 0;
 	m_bitsDamage = 0;
@@ -160,7 +160,7 @@ void CHudHealth::GetPainColor( int &r, int &g, int &b )
 	else if( iHealth < 0 )
 		iHealth = 0;
 
-	g = iHealth * 255 / 100;
+	g = iHealth * 255 / 200;
 	r = 255 - g;
 	b = 0;
 #else
