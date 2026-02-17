@@ -54,13 +54,6 @@ void CMP5::Spawn()
 
 	m_iDefaultAmmo = MP5_DEFAULT_GIVE;
 
-#if CLIENT_DLL
-	if( bIsMultiplayer() )
-#else
-	if( g_pGameRules->IsMultiplayer() )
-#endif
-		m_iDefaultAmmo = MP5_DEFAULT_GIVE_MP;
-
 	FallInit();// get ready to fall down.
 }
 
@@ -133,14 +126,14 @@ void CMP5::PrimaryAttack()
 	if( m_pPlayer->pev->waterlevel == 3 )
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.15f;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.11f;
 		return;
 	}
 
 	if( m_iClip <= 0 )
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.15f;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.11f;
 		return;
 	}
 
@@ -157,7 +150,7 @@ void CMP5::PrimaryAttack()
 	Vector vecSrc = m_pPlayer->GetGunPosition();
 	Vector vecAiming = m_pPlayer->GetAutoaimVector( AUTOAIM_5DEGREES );
 	Vector vecDir;
-#if CLIENT_DLL
+#ifdef CLIENT_DLL
 	if( bIsMultiplayer() )
 #else
 	if( g_pGameRules->IsMultiplayer() )
@@ -173,7 +166,7 @@ void CMP5::PrimaryAttack()
 	}
 
 	int flags;
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 	flags = FEV_NOTHOST;
 #else
 	flags = 0;
@@ -227,15 +220,15 @@ void CMP5::SecondaryAttack( void )
 					gpGlobals->v_forward * 800.0f );
 
 	int flags;
-#if CLIENT_WEAPONS
+#if defined( CLIENT_WEAPONS )
 	flags = FEV_NOTHOST;
 #else
 	flags = 0;
 #endif
 	PLAYBACK_EVENT( flags, m_pPlayer->edict(), m_usMP52 );
 
-	m_flNextPrimaryAttack = GetNextAttackDelay( 1.0f );
-	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.0f;
+	m_flNextPrimaryAttack = GetNextAttackDelay( 0.7f );
+	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.6f;
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 5.0f;// idle pretty soon after shooting.
 
 	if( !m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType] )
@@ -275,6 +268,12 @@ void CMP5::WeaponIdle( void )
 	SendWeaponAnim( iAnim );
 
 	m_flTimeWeaponIdle = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 ); // how long till we do this again.
+}
+
+BOOL CMP5::IsUseable()
+{
+	//Can be used if the player has AR grenades. - Solokiller
+	return CBasePlayerWeapon::IsUseable() || m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType] > 0;
 }
 
 class CMP5AmmoClip : public CBasePlayerAmmo
